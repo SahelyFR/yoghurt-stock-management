@@ -1,10 +1,9 @@
 <script setup lang="js">
 import axios from 'axios';
-import { ref } from 'vue'
 import ResultPresentation from './ResultPresentation.vue';
+import { ref } from 'vue'
 
-
-const data = ref(null)
+const consumptionResult = ref(null)
 const lineValues = ref()
 const tableData = ref()
 const intialStock = 6;
@@ -29,33 +28,30 @@ async function handleFormSubmit(event) {
   });
 
   if(response){
-    data.value = response
-    tableData.value = response.filter(item => item.quantityToOrder > 0)
-    lineValues.value = response.map(prepareChartData)
+    consumptionResult.value = response
+    tableData.value = response.filter(item => (item.quantityToOrder > 0 || item.quantityReceived > 0))
+    lineValues.value = response.map((dailyResponse) => {
+      const formattedDate = dailyResponse.day.split('T')[0].split('-');
+      const chartDate = new Date(formattedDate[0], formattedDate[1]-1, formattedDate[2])
+      stock.value = dailyResponse.stock;
+
+      return [chartDate.getTime(), stock.value]
+    })
   }
   
 }
 
-function prepareChartData(dailyData) {
-  
-  const formattedDate = dailyData.day.split('T')[0].split('-');
-  const chartDate = new Date(formattedDate[0], formattedDate[1]-1, formattedDate[2])
-  stock.value = stock.value + dailyData.quantityReceived - dailyData.quantityConsumed;
-
-  return [chartDate.getTime(), stock.value]
-}
-
-
 function resetResults() {
-  data.value = null
+  consumptionResult.value = null
 }
+
 </script>
 
 <template>
-    <div v-if="data == null">
+    <div v-if="consumptionResult == null">
       <form @submit="handleFormSubmit">
         <v-btn type="submit" variant="tonal" color="primary">
-          Lancer le calcul
+          Lancer le calcul avec CompositionAPI
         </v-btn>
         <v-row justify="center">
           <v-col cols="auto">

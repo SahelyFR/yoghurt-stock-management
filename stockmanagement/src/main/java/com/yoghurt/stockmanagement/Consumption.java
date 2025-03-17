@@ -26,26 +26,39 @@ public class Consumption {
         LinkedHashSet<ConsumptionDetail> yearlyNeed = new LinkedHashSet<ConsumptionDetail>();
         Calendar day = startDate;
         int weeklyNeed = IntStream.of(weeklyConsumption).sum();
+        int besoin= weeklyNeed - inStock;
         
         for(int i=0; i<52; i++){           
             int quantityToOrder = 0;
-            int besoin= weeklyNeed - inStock;
+            if(i == 0){
+                besoin = weeklyNeed;
+            }
 
             for(int j=0; j<7; j++) {
-                int consumptionDayIndex = j == 0 ? 6 : j - 1;
+                int consumptionDayIndex = j  == 0 ? 6 : j - 1;
+                int realDailyConso = 0;
+
                 if(j == 0) {
+                    besoin = weeklyNeed;
                     quantityToOrder = (int) Math.round(besoin / YOGHURT_PER_PACK);
+                    System.out.println("Week["+(int)(i+1)+"] : A commander : " + quantityToOrder + " packs = " + quantityToOrder*YOGHURT_PER_PACK + " yaourts");
                 }
 
                 if(j == deliveryDelay){
-                    inStock += (quantityToOrder * YOGHURT_PER_PACK);
+                    inStock += quantityToOrder * YOGHURT_PER_PACK;
                 }
 
-                inStock -= weeklyConsumption[consumptionDayIndex];
-                System.out.println("Conso du jour(" + j + ") : " + weeklyConsumption[consumptionDayIndex]);
-                System.out.println("Stock(" + j + ") : " + inStock);
+                if(inStock - weeklyConsumption[consumptionDayIndex] < 0){
+                    inStock = 0;
+                } else {
+                    inStock -= weeklyConsumption[consumptionDayIndex];
+                    realDailyConso = weeklyConsumption[consumptionDayIndex];
+                }
+
+                System.out.println("Conso du jour(" + (int)(j+1) + ") : " + realDailyConso + " => Stock : " + inStock);
+                
                 yearlyNeed.add(new ConsumptionDetail(day.getTime(), 
-                    weeklyConsumption[consumptionDayIndex], 
+                    realDailyConso, 
                     j==0 ? quantityToOrder : 0, 
                     j == deliveryDelay ? quantityToOrder * YOGHURT_PER_PACK : 0,
                     inStock));
