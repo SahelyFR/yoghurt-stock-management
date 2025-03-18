@@ -16,27 +16,10 @@ import ResultPresentation from './ResultPresentation.vue';
         stock: this.intialStock,
       }
     },
-    computed: {
-      tableData() {
-        if(this.consumptionResult !== null){
-          return this.consumptionResult.filter(item => (item.quantityToOrder > 0 || item.quantityReceived > 0))
-        }
-        return null
-      },
-      lineValues() {
-        if(this.consumptionResult !== null) {
-          return this.consumptionResult.map((dailyResponse) => {
-            const formattedDate = dailyResponse.day.split('T')[0].split('-');
-            const chartDate = new Date(formattedDate[0], formattedDate[1]-1, formattedDate[2])
-            this.stock = dailyResponse.stock;
-
-            return [chartDate.getTime(), this.stock]
-          })
-        }
-        return null
-      },
-    },
     methods: {
+      getDayFromResponseDate(givenDate){
+        return givenDate.split('T')[0];
+      },
       resetResults() {
         this.consumptionResult = null
       },
@@ -60,6 +43,31 @@ import ResultPresentation from './ResultPresentation.vue';
           this.consumptionResult = response
         }
       }
+    },
+    computed: {
+      tableData() {
+        if(this.consumptionResult !== null){
+          return this.consumptionResult
+            .filter(item => (item.quantityToOrder > 0 || item.quantityReceived > 0))
+            .map((item) => {
+              return {...item,
+                day: this.getDayFromResponseDate(item.day)
+          }})
+        }
+        return null
+      },
+      lineValues() {
+        if(this.consumptionResult !== null) {
+          return this.consumptionResult.map((dailyResponse) => {
+            const formattedDate = this.getDayFromResponseDate(dailyResponse.day).split('-');
+            const chartDate = new Date(formattedDate[0], formattedDate[1]-1, formattedDate[2])
+            this.stock = dailyResponse.stock;
+
+            return [chartDate.getTime(), this.stock]
+          })
+        }
+        return null
+      },
     },
   }
 </script>

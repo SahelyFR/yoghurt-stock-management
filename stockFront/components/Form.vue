@@ -29,9 +29,14 @@ async function handleFormSubmit(event) {
 
   if(response){
     consumptionResult.value = response
-    tableData.value = response.filter(item => (item.quantityToOrder > 0 || item.quantityReceived > 0))
+    tableData.value = response
+        .filter(item => (item.quantityToOrder > 0 || item.quantityReceived > 0))
+        .map((item) => {
+              return {...item,
+                day: getDayFromResponseDate(item.day)
+          }})
     lineValues.value = response.map((dailyResponse) => {
-      const formattedDate = dailyResponse.day.split('T')[0].split('-');
+      const formattedDate = getDayFromResponseDate(dailyResponse.day).split('-');
       const chartDate = new Date(formattedDate[0], formattedDate[1]-1, formattedDate[2])
       stock.value = dailyResponse.stock;
 
@@ -39,6 +44,10 @@ async function handleFormSubmit(event) {
     })
   }
   
+}
+
+function getDayFromResponseDate(givenDate){
+  return givenDate.split('T')[0];
 }
 
 function resetResults() {
